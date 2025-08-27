@@ -14,11 +14,11 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
   const [editDescription, setEditDescription] = useState(todo.description || '')
   const [showDescription, setShowDescription] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const [showDeleteModal, setShowDeleteModal] = useState(false)
 
   // Toggle completed status
   const toggleCompleted = async () => {
     setIsLoading(true)
-    
     const { error } = await supabase
       .from('todos')
       .update({ completed: !todo.completed })
@@ -30,22 +30,16 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
     } else {
       onTodoUpdated()
     }
-    
     setIsLoading(false)
   }
 
   // Save edit
   const saveEdit = async () => {
     if (!editTitle.trim()) return
-
     setIsLoading(true)
-    
     const { error } = await supabase
       .from('todos')
-      .update({ 
-        title: editTitle.trim(),
-        description: editDescription.trim() || null
-      })
+      .update({ title: editTitle.trim(), description: editDescription.trim() || null })
       .eq('id', todo.id)
 
     if (error) {
@@ -55,7 +49,6 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
       setIsEditing(false)
       onTodoUpdated()
     }
-    
     setIsLoading(false)
   }
 
@@ -68,10 +61,7 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
 
   // Delete task
   const deleteTodo = async () => {
-    if (!confirm('Are you sure you want to delete this task?')) return
-
     setIsLoading(true)
-    
     const { error } = await supabase
       .from('todos')
       .delete()
@@ -81,16 +71,20 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
       console.error('Error deleting task:', error)
       alert('Error deleting task')
     } else {
+      setShowDeleteModal(false)
       onTodoUpdated()
     }
-    
     setIsLoading(false)
   }
 
   return (
-    <div className={`border border-gray-600 rounded-lg p-4 mb-3 ${todo.completed ? 'bg-gray-800' : 'bg-gray-750'} ${isLoading ? 'opacity-50' : ''}`}>
+    <div
+      className={`border border-gray-600 rounded-lg p-4 mb-3 ${
+        todo.completed ? 'bg-gray-800' : 'bg-gray-750'
+      } ${isLoading ? 'opacity-50' : ''}`}
+    >
       <div className="flex items-start gap-3">
-        {/* Checkbox to mark as completed */}
+        {/* Checkbox */}
         <input
           type="checkbox"
           checked={todo.completed}
@@ -138,12 +132,9 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
             </div>
           ) : (
             <div>
-              {/* Title */}
               <div className={`text-lg ${todo.completed ? 'line-through text-gray-400' : 'text-white'}`}>
                 {todo.title}
               </div>
-              
-              {/* Description */}
               {todo.description && (
                 <div className="mt-2">
                   <p className={`text-sm ${todo.completed ? 'text-gray-500' : 'text-gray-300'} whitespace-pre-wrap`}>
@@ -151,9 +142,15 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
                   </p>
                 </div>
               )}
-              
-              {/* Add description */}
-              {showDescription && !isEditing && (
+              {!todo.description && !showDescription && (
+                <button
+                  onClick={() => setShowDescription(true)}
+                  className="text-blue-400 hover:text-blue-300 text-sm mt-2 cursor-pointer"
+                >
+                  + Add description
+                </button>
+              )}
+              {showDescription && (
                 <div className="mt-2 space-y-2">
                   <textarea
                     value={editDescription}
@@ -185,16 +182,6 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
                   </div>
                 </div>
               )}
-              
-              {/* Button to add description */}
-              {!todo.description && !showDescription && !isEditing && (
-                <button
-                  onClick={() => setShowDescription(true)}
-                  className="text-blue-400 hover:text-blue-300 text-sm mt-2 cursor-pointer"
-                >
-                  + Add description
-                </button>
-              )}
             </div>
           )}
         </div>
@@ -210,7 +197,7 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
               Edit
             </button>
             <button
-              onClick={deleteTodo}
+              onClick={() => setShowDeleteModal(true)}
               disabled={isLoading}
               className="text-red-400 hover:text-red-300 px-2 py-1 text-sm cursor-pointer"
             >
@@ -222,8 +209,38 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
 
       {/* Creation date */}
       <div className="text-xs text-gray-500 mt-3">
-      Created at: {new Date(todo.created_at).toLocaleString('en-US')}
+        Created at: {new Date(todo.created_at).toLocaleString('en-US')}
       </div>
+
+      {/* Delete modal */}
+      {showDeleteModal && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center">
+    {/* Fundo borrado transparente */}
+    <div className="absolute inset-0 backdrop-blur-md"></div>
+
+    {/* Modal */}
+    <div className="relative bg-gray-800 p-6 rounded-lg border border-gray-600 shadow-lg max-w-sm w-full text-center animate-fadeIn">
+      <h3 className="text-white text-lg mb-4">Confirm Deletion</h3>
+      <p className="text-gray-300 mb-6">Are you sure you want to delete this task?</p>
+      <div className="flex justify-center gap-4">
+        <button
+          onClick={deleteTodo}
+          className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+        >
+          Delete
+        </button>
+        <button
+          onClick={() => setShowDeleteModal(false)}
+          className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
+        >
+          Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
+
     </div>
   )
 }
