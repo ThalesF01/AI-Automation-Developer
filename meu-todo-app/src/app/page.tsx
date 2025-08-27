@@ -1,7 +1,6 @@
 'use client'
 import { useEffect, useState, useCallback } from 'react'
-import { supabase } from '@/lib/supabase'
-import { Todo } from '@/types/todo'
+import type { Todo } from '@/types/todo'
 import AddTodoForm from '@/components/AddTodoForm'
 import TodoList from '@/components/TodoList'
 
@@ -11,28 +10,27 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
 
-  // Function to load tasks (memoized to satisfy ESLint)
+  // Function to load tasks via API
   const loadTodos = useCallback(async () => {
     if (!userEmail) return
-
     setIsLoading(true)
-    const { data, error } = await supabase
-      .from('todos')
-      .select('*')
-      .eq('user_email', userEmail)
-      .order('created_at', { ascending: false })
 
-    if (error) {
-      console.error('Error loading tasks:', error)
-      alert('Error loading tasks')
-    } else {
-      setTodos(data || [])
+    try {
+      const response = await fetch(`/api/todos?userEmail=${encodeURIComponent(userEmail)}`)
+      if (!response.ok) {
+        const err = await response.json()
+        throw new Error(err.error || 'Failed to load tasks')
+      }
+      const data: Todo[] = await response.json()
+      setTodos(data)
+    } catch (err: any) {
+      console.error('Error loading tasks:', err)
+      alert(`Error loading tasks: ${err.message}`)
+    } finally {
+      setIsLoading(false)
     }
-
-    setIsLoading(false)
   }, [userEmail])
 
-  // Login
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault()
     if (userEmail.trim()) {
@@ -41,14 +39,12 @@ export default function Home() {
     }
   }
 
-  // Logout
   const handleLogout = () => {
     setIsLoggedIn(false)
     setUserEmail('')
     setTodos([])
   }
 
-  // Reload automatically when logged in
   useEffect(() => {
     if (isLoggedIn && userEmail) {
       loadTodos()
@@ -61,17 +57,13 @@ export default function Home() {
         {/* Header */}
         <div className="bg-gray-800 border border-gray-600 rounded-lg shadow-sm p-6 mb-6">
           <h1 className="text-3xl font-bold text-white mb-2">📝 My Task List</h1>
-          <p className="text-gray-300">
-            Organize your tasks simply and efficiently
-          </p>
+          <p className="text-gray-300">Organize your tasks simply and efficiently</p>
         </div>
 
         {!isLoggedIn ? (
           /* Login Screen */
           <div className="bg-gray-800 border border-gray-600 rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold mb-4 text-white">
-              Enter your email
-            </h2>
+            <h2 className="text-xl font-semibold mb-4 text-white">Enter your email</h2>
             <form onSubmit={handleLogin} className="flex gap-3">
               <input
                 type="email"

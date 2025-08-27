@@ -1,8 +1,6 @@
 // components/AddTodoForm.tsx
 'use client'
 import { useState } from 'react'
-import { supabase } from '@/lib/supabase'
-import { enhanceTask } from '@/lib/n8n'
 import type { Todo } from '@/types/todo'
 
 interface AddTodoFormProps {
@@ -20,46 +18,28 @@ export default function AddTodoForm({ userEmail, onTodoAdded }: AddTodoFormProps
     if (!title.trim() || !userEmail) return
     setIsLoading(true)
 
-    // 1️⃣ Inserir no Supabase com status 'processing'
-    const { data, error } = await supabase
-      .from('todos')
-      .insert([{
-        title: title.trim(),
-        description: description.trim() || null,
-        user_email: userEmail,
-        completed: false,
-        processing_status: 'processing'
-      }])
-      .select()
-
-    if (error || !data || !data[0]) {
-      alert(`Error adding task: ${error?.message}`)
-      setIsLoading(false)
-      return
-    }
-
-    const taskId = data[0].id as number
-
     try {
-      // 2️⃣ Chamar o N8N e esperar retorno
-      const enhanced = await enhanceTask(taskId)
-      if (enhanced) {
-        // 3️⃣ Atualizar a task com os dados otimizados
-        await supabase.from('todos')
-          .update({
-            title: enhanced.title ?? title,
-            description: enhanced.description ?? description,
-            processing_status: 'ready'
-          })
-          .eq('id', taskId)
+      // 1️⃣ Call the internal API to add & enhance task
+      const response = await fetch('/api/todos', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title, description, userEmail })
+      })
+
+      if (!response.ok) {
+        const err = await response.json()
+        throw new Error(err.message || 'Failed to add task')
       }
 
-      onTodoAdded() // atualizar lista
+      const optimizedTask: Todo = await response.json()
+      onTodoAdded(optimizedTask)
+
       setTitle('')
       setDescription('')
-    } catch (err) {
-      console.error('Enhancement failed', err)
-      onTodoAdded() // atualizar lista mesmo assim
+    } catch (err: any) {
+      console.error('Adding task failed', err)
+      alert(`Error adding task: ${err.message}`)
+      onTodoAdded() // refresh list anyway
     } finally {
       setIsLoading(false)
     }
