@@ -8,6 +8,10 @@ interface TodoItemProps {
   onTodoUpdated: () => void
 }
 
+interface ApiErrorResponse {
+  error: string
+}
+
 export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [editTitle, setEditTitle] = useState(todo.title)
@@ -30,12 +34,13 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
       })
       
       if (!response.ok) {
-        const error = await response.json()
+        const error: ApiErrorResponse = await response.json()
         throw new Error(error.error || 'Failed to update task')
       }
       
       onTodoUpdated()
-    } catch (err: any) {
+    } catch (error) {
+      const err = error as Error
       console.error('Error toggling task:', err)
       alert(`Error updating task: ${err.message}`)
     } finally {
@@ -60,14 +65,15 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
       })
       
       if (!response.ok) {
-        const error = await response.json()
+        const error: ApiErrorResponse = await response.json()
         throw new Error(error.error || 'Failed to edit task')
       }
       
       setIsEditing(false)
       setShowDescription(false)
       onTodoUpdated()
-    } catch (err: any) {
+    } catch (error) {
+      const err = error as Error
       console.error('Error editing task:', err)
       alert(`Error editing task: ${err.message}`)
     } finally {
@@ -93,13 +99,14 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
       })
       
       if (!response.ok) {
-        const error = await response.json()
+        const error: ApiErrorResponse = await response.json()
         throw new Error(error.error || 'Failed to delete task')
       }
       
       setShowDeleteModal(false)
       onTodoUpdated()
-    } catch (err: any) {
+    } catch (error) {
+      const err = error as Error
       console.error('Error deleting task:', err)
       alert(`Error deleting task: ${err.message}`)
     } finally {
@@ -291,7 +298,7 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
             >
               <h3 className="text-white text-lg mb-4">Confirm Deletion</h3>
               <p className="text-gray-300 mb-6">
-                Are you sure you want to delete "<span className="font-semibold">{todo.title}</span>"?
+                Are you sure you want to delete &ldquo;<span className="font-semibold">{todo.title}</span>&rdquo;?
               </p>
               <div className="flex justify-center gap-4">
                 <button 

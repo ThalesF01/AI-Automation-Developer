@@ -2,10 +2,33 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { supabase } from '@/lib/supabase'
 
+interface CreateTodoBody {
+  title: string
+  description?: string
+  userEmail: string
+}
+
+interface UpdateTodoBody {
+  todoId: number
+  title?: string
+  description?: string
+  completed?: boolean
+}
+
+interface DeleteTodoBody {
+  todoId: number
+}
+
+interface N8nResponse {
+  title?: string
+  description?: string
+}
+
 // POST: Add a new todo and optionally enhance via N8N
 export async function POST(req: NextRequest) {
   try {
-    const { title, description, userEmail } = await req.json()
+    const body: CreateTodoBody = await req.json()
+    const { title, description, userEmail } = body
 
     if (!title || !userEmail) {
       return NextResponse.json({ error: 'Title and userEmail are required' }, { status: 400 })
@@ -42,7 +65,7 @@ export async function POST(req: NextRequest) {
         })
         
         if (n8nResponse.ok) {
-          const enhanced = await n8nResponse.json()
+          const enhanced: N8nResponse = await n8nResponse.json()
           
           // Update with enhanced content if available
           if (enhanced?.title || enhanced?.description) {
@@ -78,7 +101,8 @@ export async function POST(req: NextRequest) {
     }
 
     return NextResponse.json(data)
-  } catch (err: any) {
+  } catch (error) {
+    const err = error as Error
     console.error('POST /api/todos error:', err)
     return NextResponse.json({ error: err.message || 'Unexpected error' }, { status: 500 })
   }
@@ -104,7 +128,8 @@ export async function GET(req: NextRequest) {
     }
 
     return NextResponse.json(data || [])
-  } catch (err: any) {
+  } catch (error) {
+    const err = error as Error
     console.error('GET /api/todos error:', err)
     return NextResponse.json({ error: err.message || 'Unexpected error' }, { status: 500 })
   }
@@ -113,13 +138,14 @@ export async function GET(req: NextRequest) {
 // PATCH: Update a todo (title, description, completed)
 export async function PATCH(req: NextRequest) {
   try {
-    const { todoId, title, description, completed } = await req.json()
+    const body: UpdateTodoBody = await req.json()
+    const { todoId, title, description, completed } = body
     
     if (!todoId) {
       return NextResponse.json({ error: 'todoId is required' }, { status: 400 })
     }
 
-    const updates: any = {}
+    const updates: Record<string, unknown> = {}
     if (title !== undefined) updates.title = title.trim()
     if (description !== undefined) updates.description = description?.trim() || null
     if (completed !== undefined) updates.completed = completed
@@ -136,7 +162,8 @@ export async function PATCH(req: NextRequest) {
     }
 
     return NextResponse.json(data)
-  } catch (err: any) {
+  } catch (error) {
+    const err = error as Error
     console.error('PATCH /api/todos error:', err)
     return NextResponse.json({ error: err.message || 'Unexpected error' }, { status: 500 })
   }
@@ -145,7 +172,8 @@ export async function PATCH(req: NextRequest) {
 // DELETE: Remove a todo
 export async function DELETE(req: NextRequest) {
   try {
-    const { todoId } = await req.json()
+    const body: DeleteTodoBody = await req.json()
+    const { todoId } = body
     
     if (!todoId) {
       return NextResponse.json({ error: 'todoId is required' }, { status: 400 })
@@ -161,7 +189,8 @@ export async function DELETE(req: NextRequest) {
     }
 
     return NextResponse.json({ success: true })
-  } catch (err: any) {
+  } catch (error) {
+    const err = error as Error
     console.error('DELETE /api/todos error:', err)
     return NextResponse.json({ error: err.message || 'Unexpected error' }, { status: 500 })
   }

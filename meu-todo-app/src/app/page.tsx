@@ -1,8 +1,13 @@
+// app/page.tsx
 'use client'
 import { useEffect, useState, useCallback } from 'react'
 import type { Todo } from '@/types/todo'
 import AddTodoForm from '@/components/AddTodoForm'
 import TodoList from '@/components/TodoList'
+
+interface ApiErrorResponse {
+  error: string
+}
 
 export default function Home() {
   const [todos, setTodos] = useState<Todo[]>([])
@@ -18,12 +23,13 @@ export default function Home() {
     try {
       const response = await fetch(`/api/todos?userEmail=${encodeURIComponent(userEmail)}`)
       if (!response.ok) {
-        const err = await response.json()
-        throw new Error(err.error || 'Failed to load tasks')
+        const error: ApiErrorResponse = await response.json()
+        throw new Error(error.error || 'Failed to load tasks')
       }
       const data: Todo[] = await response.json()
       setTodos(data)
-    } catch (err: any) {
+    } catch (error) {
+      const err = error as Error
       console.error('Error loading tasks:', err)
       alert(`Error loading tasks: ${err.message}`)
     } finally {

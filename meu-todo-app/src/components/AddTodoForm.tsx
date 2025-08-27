@@ -8,6 +8,10 @@ interface AddTodoFormProps {
   onTodoAdded: (optimizedTask?: Todo) => void
 }
 
+interface ApiErrorResponse {
+  error: string
+}
+
 export default function AddTodoForm({ userEmail, onTodoAdded }: AddTodoFormProps) {
   const [title, setTitle] = useState('')
   const [description, setDescription] = useState('')
@@ -19,7 +23,7 @@ export default function AddTodoForm({ userEmail, onTodoAdded }: AddTodoFormProps
     setIsLoading(true)
 
     try {
-      // 1️⃣ Call the internal API to add & enhance task
+      // Call the internal API to add & enhance task
       const response = await fetch('/api/todos', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -27,8 +31,8 @@ export default function AddTodoForm({ userEmail, onTodoAdded }: AddTodoFormProps
       })
 
       if (!response.ok) {
-        const err = await response.json()
-        throw new Error(err.message || 'Failed to add task')
+        const error: ApiErrorResponse = await response.json()
+        throw new Error(error.error || 'Failed to add task')
       }
 
       const optimizedTask: Todo = await response.json()
@@ -36,7 +40,8 @@ export default function AddTodoForm({ userEmail, onTodoAdded }: AddTodoFormProps
 
       setTitle('')
       setDescription('')
-    } catch (err: any) {
+    } catch (error) {
+      const err = error as Error
       console.error('Adding task failed', err)
       alert(`Error adding task: ${err.message}`)
       onTodoAdded() // refresh list anyway
