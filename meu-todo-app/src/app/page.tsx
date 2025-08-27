@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { supabase } from '@/lib/supabase'
 import { Todo } from '@/types/todo'
 import AddTodoForm from '@/components/AddTodoForm'
@@ -11,29 +11,28 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
 
-  // Function to load tasks
-  const loadTodos = async () => {
+  // Function to load tasks (memoized to satisfy ESLint)
+  const loadTodos = useCallback(async () => {
     if (!userEmail) return
-    
+
     setIsLoading(true)
-    
     const { data, error } = await supabase
       .from('todos')
       .select('*')
       .eq('user_email', userEmail)
       .order('created_at', { ascending: false })
-    
+
     if (error) {
-      console.error('Error load tasks:', error)
-      alert('Error load tasks')
+      console.error('Error loading tasks:', error)
+      alert('Error loading tasks')
     } else {
       setTodos(data || [])
     }
-    
-    setIsLoading(false)
-  }
 
-  // Function to login
+    setIsLoading(false)
+  }, [userEmail])
+
+  // Login
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault()
     if (userEmail.trim()) {
@@ -42,7 +41,7 @@ export default function Home() {
     }
   }
 
-  // Function to logout
+  // Logout
   const handleLogout = () => {
     setIsLoggedIn(false)
     setUserEmail('')
@@ -54,16 +53,14 @@ export default function Home() {
     if (isLoggedIn && userEmail) {
       loadTodos()
     }
-  }, [isLoggedIn, userEmail])
+  }, [isLoggedIn, userEmail, loadTodos])
 
   return (
     <main className="min-h-screen bg-gray-900">
       <div className="container mx-auto max-w-4xl p-4">
         {/* Header */}
         <div className="bg-gray-800 border border-gray-600 rounded-lg shadow-sm p-6 mb-6">
-          <h1 className="text-3xl font-bold text-white mb-2">
-            📝 My Task List
-          </h1>
+          <h1 className="text-3xl font-bold text-white mb-2">📝 My Task List</h1>
           <p className="text-gray-300">
             Organize your tasks simply and efficiently
           </p>
@@ -72,11 +69,13 @@ export default function Home() {
         {!isLoggedIn ? (
           /* Login Screen */
           <div className="bg-gray-800 border border-gray-600 rounded-lg shadow-sm p-6">
-            <h2 className="text-xl font-semibold mb-4 text-white">Enter your email</h2>
+            <h2 className="text-xl font-semibold mb-4 text-white">
+              Enter your email
+            </h2>
             <form onSubmit={handleLogin} className="flex gap-3">
               <input
                 type="email"
-                placeholder="Enter your email (ex: john@email.com)"
+                placeholder="Enter your email"
                 value={userEmail}
                 onChange={(e) => setUserEmail(e.target.value)}
                 className="flex-1 border border-gray-600 bg-gray-700 text-white p-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 placeholder-gray-400"
@@ -90,7 +89,7 @@ export default function Home() {
               </button>
             </form>
             <p className="text-sm text-gray-400 mt-3">
-            Your tasks will be saved and you can access them anytime with this email.
+              Your tasks will be saved and you can access them anytime with this email.
             </p>
           </div>
         ) : (
@@ -119,13 +118,10 @@ export default function Home() {
               </div>
             </div>
 
-            {/* Form to add task */}
+            {/* Add Task Form */}
             <div className="bg-gray-800 border border-gray-600 rounded-lg shadow-sm p-6">
               <h2 className="text-lg font-semibold mb-4 text-white">Add New Task</h2>
-              <AddTodoForm 
-                userEmail={userEmail} 
-                onTodoAdded={loadTodos} 
-              />
+              <AddTodoForm userEmail={userEmail} onTodoAdded={loadTodos} />
             </div>
 
             {/* Task List */}
@@ -135,10 +131,7 @@ export default function Home() {
                   <p className="text-gray-300">Loading tasks...</p>
                 </div>
               ) : (
-                <TodoList 
-                  todos={todos} 
-                  onTodoUpdated={loadTodos} 
-                />
+                <TodoList todos={todos} onTodoUpdated={loadTodos} />
               )}
             </div>
           </div>

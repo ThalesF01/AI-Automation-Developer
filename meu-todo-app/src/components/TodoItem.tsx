@@ -60,7 +60,6 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
 
   return (
     <>
-      {/* Todo Item com animação ao aparecer */}
       <AnimatePresence>
         <motion.div
           key={todo.id}
@@ -68,9 +67,7 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
           animate={{ opacity: 1, y: 0 }}
           exit={{ opacity: 0, y: 20 }}
           transition={{ duration: 0.25 }}
-          className={`border border-gray-600 rounded-lg p-4 mb-3 bg-gray-800 ${
-            isLoading ? 'opacity-50' : ''
-          }`}
+          className={`border border-gray-600 rounded-lg p-4 mb-3 bg-gray-800 ${isLoading ? 'opacity-50' : ''}`}
         >
           <div className="flex items-start gap-3">
             <input
@@ -82,7 +79,6 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
             />
 
             <div className="flex-1">
-              {/* Área de edição com animação */}
               <AnimatePresence>
                 {isEditing ? (
                   <motion.div
@@ -136,17 +132,40 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
                     <div className={`text-lg ${todo.completed ? 'line-through text-gray-400' : 'text-white'}`}>
                       {todo.title}
                     </div>
-                    {todo.description && (
+                    {todo.description ? (
                       <p className={`text-sm ${todo.completed ? 'text-gray-500' : 'text-gray-300'} mt-2 whitespace-pre-wrap`}>
                         {todo.description}
                       </p>
+                    ) : !showDescription ? (
+                      <button
+                        onClick={() => setShowDescription(true)}
+                        className="text-blue-400 hover:text-blue-300 text-sm mt-2 cursor-pointer"
+                      >
+                        + Add description
+                      </button>
+                    ) : (
+                      <div className="mt-2 space-y-2">
+                        <textarea
+                          value={editDescription}
+                          onChange={(e) => setEditDescription(e.target.value)}
+                          placeholder="Add a description..."
+                          rows={3}
+                          className="w-full border border-gray-600 bg-gray-800 text-white p-2 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                        />
+                        <button
+                          onClick={saveEdit}
+                          className="bg-green-600 text-white px-3 py-1 rounded text-sm hover:bg-green-700"
+                        >
+                          Save
+                        </button>
+                      </div>
                     )}
                   </motion.div>
                 )}
               </AnimatePresence>
             </div>
 
-            {!isEditing && !showDescription && (
+            {!isEditing && (
               <div className="flex gap-2">
                 <button
                   onClick={() => setIsEditing(true)}
@@ -172,7 +191,7 @@ export default function TodoItem({ todo, onTodoUpdated }: TodoItemProps) {
         </motion.div>
       </AnimatePresence>
 
-      {/* Delete Modal com animação e fundo borrado */}
+      {/* Delete Modal */}
       <AnimatePresence>
         {showDeleteModal && (
           <motion.div

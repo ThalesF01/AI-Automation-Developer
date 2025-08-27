@@ -6,7 +6,7 @@ export type N8nResponse = {
   title?: string | null;
   description?: string | null;
   processing_status?: string | null;
-  [key: string]: any;
+  [key: string]: unknown;
 } | null;
 
 /**
