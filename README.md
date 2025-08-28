@@ -326,6 +326,21 @@ src/
 
 ---
 
+## Environment Variables
+
+To run this project correctly, you need to set the following environment variables:
+
+```env
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=https://yssdpkmobjereutcubbs.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inlzc2Rwa21vYmplcmV1dGN1YmJzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTYyNDM5NzYsImV4cCI6MjA3MTgxOTk3Nn0.Zb4r5DHxJuxwBFxIQSwqa81Banfi9pHcSqOslpUkUhg
+
+# N8N webhook for task enhancement
+N8N_TODO_WEBHOOK=https://thalesfiscus.app.n8n.cloud/webhook/todo-webhook
+```
+
+---
+
 ## 🔮 **Future Enhancements**
 
 - 📱 **WhatsApp Integration**: Create tasks via WhatsApp messages
