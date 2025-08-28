@@ -10,8 +10,6 @@
 
 **A sophisticated task management application that leverages AI automation to enhance your productivity**
 
-[🌐 Live Demo](https://your-app.vercel.app) • [📹 Video Demo](https://loom.com/your-video) • [🔧 N8N Workflow](https://thalesfiscus.app.n8n.cloud)
-
 </div>
 
 ---
